@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion} from "framer-motion"
 
 export default function TweetGenerator() {
   const [isLoading, setIsLoading] = useState(false)
