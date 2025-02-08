@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ tweet: bodyText });
     }
     if (response.includes("no")) {
-        return NextResponse.json({ tweet: "No, the tweet is not valid for a product marketing" });
+        return NextResponse.json({ tweet: "Please cross check your product details" });
     }
 
     console.log("Generated Tweet:", chatCompletion.choices[0]?.message?.content || "");
