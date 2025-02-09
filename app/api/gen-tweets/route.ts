@@ -13,18 +13,49 @@ export async function POST(req: NextRequest) {
     }
 
     // Format the prompt for the AI model
-    const formattedPrompt = `You are a professional SaaS product marketer. Write a tweet about this product:\n\n${bodyText}`;
+    const formattedPrompt = `You are a world-class SaaS product marketer skilled at crafting viral tweets. Write a tweet about the following product in a way that is:
+	•	Simple (easy to understand)
+	•	Human-like (casual, friendly, and relatable)
+	•	Attention-grabbing (stopping the scroll instantly)
+	•	Memorable (leaves a lasting impression and sparks curiosity)
 
+Here’s the product:
+
+${bodyText}
+
+Return only the tweet. No explanations, no analysis, no additional text—just the tweet.`;
+
+    // Generate tweet using Groq API
     const chatCompletion = await groq.chat.completions.create({
       messages: [{ role: "user", content: formattedPrompt }],
       model: "llama-3.3-70b-versatile",
     });
 
-    console.log("Generated Tweet:", chatCompletion.choices[0]?.message?.content || "");
+    const generatedTweet = chatCompletion.choices[0]?.message?.content?.trim() || "";
 
-    return NextResponse.json({ tweet: chatCompletion.choices[0]?.message?.content });
+    if (!generatedTweet) {
+      return NextResponse.json({ error: "Failed to generate tweet" }, { status: 500 });
+    }
+
+    console.log("Generated Tweet:", generatedTweet);
+
+    // Call the QC API to check tweet quality
+    const qcResponse = await fetch("http://localhost:3000/api/qc", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: generatedTweet,
+    });
+
+    if (!qcResponse.ok) {
+      return NextResponse.json({ error: "QC API failed" }, { status: 500 });
+    }
+
+    // Parse the QC API response
+    const qcResult = await qcResponse.json();
+
+    return NextResponse.json({ tweet: generatedTweet, qc: qcResult });
   } catch (error) {
-    console.error("Error generating tweet:", error);
+    console.error("Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

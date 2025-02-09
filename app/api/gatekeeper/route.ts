@@ -13,7 +13,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Format the prompt for the AI model
-    const formattedPrompt = `must return only "yes" or "no". if the following tweet a valid tweet for a product marketing? \n\n${bodyText}`;
+    const formattedPrompt = `Return only “yes” or “no”. No other text.
+
+Is the following tweet a valid product marketing tweet? A valid tweet must:
+	•	Clearly promote or describe a product.
+	•	Be relevant to product marketing.
+	•	Not be off-topic, spammy, or unrelated.
+
+Here is the tweet:
+
+${bodyText}`;
 
     const chatCompletion = await groq.chat.completions.create({
       messages: [{ role: "user", content: formattedPrompt }],
