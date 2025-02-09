@@ -40,7 +40,7 @@ Return only the tweet. No explanations, no analysis, no additional text—just t
     console.log("Generated Tweet:", generatedTweet);
 
     // Call the QC API to check tweet quality
-    const qcResponse = await fetch("/api/qc", {
+    const qcResponse = await fetch(`${process.env.NEXT_PUBLIC_VERCEL_URL}/api/qc`, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body: generatedTweet,
