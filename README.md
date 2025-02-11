@@ -1,4 +1,4 @@
-# TweetCraftAI - AI-Powered SaaS Tweet Generator
+# TweetGeni - AI-Powered SaaS Tweet Generator
 
 ## 🚀 Introduction
 TweetCraftAI helps SaaS businesses generate engaging tweets effortlessly. Just enter your product details, and the AI generates six tweets across three categories: **CTA, Casual, and Engaging.**
