@@ -6,6 +6,7 @@ export default function TweetGenerator() {
   const [isLoading, setIsLoading] = useState(false)
   const [tweet, setTweet] = useState("")
   const [productDetails, setProductDetails] = useState("")
+  const [tweetType, setTweetType] = useState("CTA") // Default type
   const [copied, setCopied] = useState(false) // Track copy state
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -16,7 +17,7 @@ export default function TweetGenerator() {
       const response = await fetch("/api/gen-tweets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productDetails }),
+        body: JSON.stringify({ productDetails, tweetType }), // Include tweetType
       })
 
       if (!response.ok) throw new Error("Failed to generate tweets")
@@ -72,6 +73,28 @@ export default function TweetGenerator() {
             />
           </motion.div>
         </motion.div>
+
+        {/* Tweet Type Selection Dropdown */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="mt-4">
+          <label htmlFor="tweetType" className="block text-sm font-medium text-gray-700 mb-2">
+            Select Tweet Type
+          </label>
+          <motion.div whileFocus={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+            <select
+              id="tweetType"
+              value={tweetType}
+              onChange={(e) => setTweetType(e.target.value)}
+              className="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+            >
+              <option value="CTA">Call to Action</option>
+              <option value="Casual">Casual</option>
+              <option value="Educational">Educational</option>
+              <option value="Funny">Funny</option>
+              <option value="Inspirational">Inspirational</option>
+            </select>
+          </motion.div>
+        </motion.div>
+
         <motion.button
           type="submit"
           className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors"

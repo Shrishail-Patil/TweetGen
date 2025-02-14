@@ -5,25 +5,44 @@ const groq = new Groq({ apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY });
 
 export async function POST(req: NextRequest) {
   try {
-    // Read the request body as plain text
-    const bodyText = await req.text();
+    // Parse the JSON body
+    const { productDetails, tweetType } = await req.json();
 
-    if (!bodyText.trim()) {
-      return NextResponse.json({ error: "Empty request body" }, { status: 400 });
+    if (!productDetails?.trim()) {
+      return NextResponse.json({ error: "Product details cannot be empty" }, { status: 400 });
     }
+
+    if (!tweetType) {
+      return NextResponse.json({ error: "Tweet type is required" }, { status: 400 });
+    }
+
+    // Define different styles for tweet generation
+    const tweetTypePrompts: Record<string, string> = {
+      CTA: "Focus on a strong call-to-action, encouraging engagement or sign-ups.",
+      Casual: "Write in a fun, relaxed, and friendly tone.",
+      Educational: "Share an insightful or informative tweet about the product.",
+      Funny: "Make it witty and humorous while still being relevant.",
+      Inspirational: "Write something motivating and uplifting about the product.",
+    };
+
+    // Default to CTA if the provided type is not recognized
+    const tweetStylePrompt = tweetTypePrompts[tweetType] || tweetTypePrompts["CTA"];
 
     // Format the prompt for the AI model
     const formattedPrompt = `You are a world-class SaaS product marketer skilled at crafting viral tweets. Write a tweet about the following product in a way that is:
-	•	Simple (easy to understand)
-	•	Human-like (casual, friendly, and relatable)
-	•	Attention-grabbing (stopping the scroll instantly)
-	•	Memorable (leaves a lasting impression and sparks curiosity)
+    • Simple (easy to understand)
+    • Human-like (casual, friendly, and relatable)
+    • Attention-grabbing (stopping the scroll instantly)
+    • Memorable (leaves a lasting impression and sparks curiosity)
+    • Short and informative (shouldn't require additional context and easy to read)
+    
+    Style: ${tweetStylePrompt}
 
-Here’s the product:
+    Here’s the product:
 
-${bodyText}
+    ${productDetails}
 
-Return only the tweet. No explanations, no analysis, no additional text—just the tweet.`;
+    Return only the tweet. No explanations, no analysis, no additional text—just the tweet.`;
 
     // Generate tweet using Groq API
     const chatCompletion = await groq.chat.completions.create({
