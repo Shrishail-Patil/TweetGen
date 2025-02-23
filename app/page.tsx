@@ -53,7 +53,7 @@ export default function Page() {
             transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
-            <h1 className="text-4xl font-bold tracking-tight mb-4">Tweet Generator</h1>
+            <h1 className="text-4xl font-bold tracking-tight mb-4">Tweet Geni</h1>
             <p className="text-muted-foreground text-lg">Generate engaging tweets for your SaaS product with AI</p>
           </motion.div>
           <TweetGenerator />
