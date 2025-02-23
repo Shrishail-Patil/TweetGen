@@ -1,13 +1,32 @@
 "use client"
-import { useState } from "react"
-import { motion } from "framer-motion"
 
-export default function TweetGenerator() {
+import type React from "react"
+
+import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Check, Copy, Loader2 } from "lucide-react"
+
+interface TweetGeneratorProps {
+  className?: string
+}
+
+const tweetTypes = [
+  { value: "CTA", label: "Call to Action" },
+  { value: "Casual", label: "Casual" },
+  { value: "Educational", label: "Educational" },
+  { value: "Funny", label: "Funny" },
+  { value: "Inspirational", label: "Inspirational" },
+]
+
+export default function TweetGenerator({ className }: TweetGeneratorProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [tweet, setTweet] = useState("")
   const [productDetails, setProductDetails] = useState("")
-  const [tweetType, setTweetType] = useState("CTA") // Default type
-  const [copied, setCopied] = useState(false) // Track copy state
+  const [tweetType, setTweetType] = useState("CTA")
+  const [copied, setCopied] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -17,7 +36,7 @@ export default function TweetGenerator() {
       const response = await fetch("/api/gen-tweets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productDetails, tweetType }), // Include tweetType
+        body: JSON.stringify({ productDetails, tweetType }),
       })
 
       if (!response.ok) throw new Error("Failed to generate tweets")
@@ -44,8 +63,6 @@ export default function TweetGenerator() {
     if (!tweet) return
     navigator.clipboard.writeText(tweet)
     setCopied(true)
-
-    // Reset "Copied!" message after 2 seconds
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -54,78 +71,74 @@ export default function TweetGenerator() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8"
+      className={`space-y-8 ${className}`}
     >
-      <form onSubmit={handleSubmit} className="mb-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-          <label htmlFor="productDetails" className="block text-sm font-medium text-gray-700 mb-2">
-            SaaS Product Details
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            Product Details
           </label>
-          <motion.div whileFocus={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-            <textarea
-              id="productDetails"
-              value={productDetails}
-              onChange={(e) => setProductDetails(e.target.value)}
-              className="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
-              rows={4}
-              placeholder="Enter your SaaS product details here..."
-              required
-            />
-          </motion.div>
-        </motion.div>
+          <Textarea
+            value={productDetails}
+            onChange={(e) => setProductDetails(e.target.value)}
+            placeholder="Describe your SaaS product..."
+            className="min-h-[120px] resize-none"
+            required
+          />
+        </div>
 
-        {/* Tweet Type Selection Dropdown */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="mt-4">
-          <label htmlFor="tweetType" className="block text-sm font-medium text-gray-700 mb-2">
-            Select Tweet Type
+        <div className="space-y-2">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            Tweet Type
           </label>
-          <motion.div whileFocus={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-            <select
-              id="tweetType"
-              value={tweetType}
-              onChange={(e) => setTweetType(e.target.value)}
-              className="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
-            >
-              <option value="CTA">Call to Action</option>
-              <option value="Casual">Casual</option>
-              <option value="Educational">Educational</option>
-              <option value="Funny">Funny</option>
-              <option value="Inspirational">Inspirational</option>
-            </select>
-          </motion.div>
-        </motion.div>
+          <Select value={tweetType} onValueChange={setTweetType}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select tweet type" />
+            </SelectTrigger>
+            <SelectContent>
+              {tweetTypes.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <motion.button
-          type="submit"
-          className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          disabled={isLoading}
-        >
-          {isLoading ? "Generating..." : "Generate Tweets"}
-        </motion.button>
+        <Button disabled={isLoading} className="w-full">
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isLoading ? "Generating..." : "Generate Tweet"}
+        </Button>
       </form>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}>
-        <h2 className="text-lg font-semibold text-gray-700 mb-2">Generated Tweets</h2>
-        <motion.div className="bg-gray-100 p-4 rounded-lg flex justify-between items-center" whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-          {tweet ? (
-            <>
-              <p className="text-gray-700 flex-1">{tweet}</p>
-              <motion.button
-                onClick={handleCopy}
-                className="ml-4 px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {copied ? "Copied!" : "Copy"}
-              </motion.button>
-            </>
-          ) : (
-            <p className="text-gray-500">No tweets generated yet...</p>
-          )}
-        </motion.div>
-      </motion.div>
+      <AnimatePresence mode="wait">
+        {tweet && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="rounded-lg border bg-card p-6 shadow-sm"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <p className="text-card-foreground leading-relaxed">{tweet}</p>
+              <Button size="icon" variant="ghost" onClick={handleCopy} className="shrink-0">
+                <AnimatePresence mode="wait">
+                  {copied ? (
+                    <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                      <Check className="h-4 w-4" />
+                    </motion.div>
+                  ) : (
+                    <motion.div key="copy" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                      <Copy className="h-4 w-4" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
+
