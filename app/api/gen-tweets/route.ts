@@ -5,18 +5,17 @@ const groq = new Groq({ apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY });
 
 export async function POST(req: NextRequest) {
   try {
-    // Parse the JSON body
     const { productDetails, tweetType } = await req.json();
 
+    // Validate inputs
     if (!productDetails?.trim()) {
-      return NextResponse.json({ error: "Product details cannot be empty" }, { status: 400 });
+      return NextResponse.json({ error: "Product details are required" }, { status: 400 });
     }
-
     if (!tweetType) {
       return NextResponse.json({ error: "Tweet type is required" }, { status: 400 });
     }
 
-    // Define different styles for tweet generation
+    // Define tweet type prompts
     const tweetTypePrompts: Record<string, string> = {
       CTA: "Focus on a strong call-to-action, encouraging engagement or sign-ups.",
       Casual: "Write in a fun, relaxed, and friendly tone.",
@@ -25,10 +24,11 @@ export async function POST(req: NextRequest) {
       Inspirational: "Write something motivating and uplifting about the product.",
     };
 
-    // Default to CTA if the provided type is not recognized
+    // Select the prompt based on tweetType
     const tweetStylePrompt = tweetTypePrompts[tweetType] || tweetTypePrompts["CTA"];
+    console.log(tweetStylePrompt);
 
-    // Format the prompt for the AI model
+    // Generate tweet using Groq API
     const formattedPrompt = `You are a world-class SaaS product marketer skilled at crafting viral tweets. Write a tweet about the following product in a way that is:
     • Simple (easy to understand)
     • Human-like (casual, friendly, and relatable)
@@ -43,8 +43,6 @@ export async function POST(req: NextRequest) {
     ${productDetails}
 
     Return only the tweet. No explanations, no analysis, no additional text—just the tweet.`;
-
-    // Generate tweet using Groq API
     const chatCompletion = await groq.chat.completions.create({
       messages: [{ role: "user", content: formattedPrompt }],
       model: "llama-3.3-70b-versatile",
@@ -56,9 +54,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to generate tweet" }, { status: 500 });
     }
 
-    console.log("Generated Tweet:", generatedTweet);
-
-    // Call the QC API to check tweet quality
+    // Call QC API
     const qcResponse = await fetch(`${process.env.NEXT_PUBLIC_VERCEL_URL}/api/qc`, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
@@ -69,7 +65,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "QC API failed" }, { status: 500 });
     }
 
-    // Parse the QC API response
     const qcResult = await qcResponse.json();
 
     return NextResponse.json({ tweet: generatedTweet, qc: qcResult });

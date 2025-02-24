@@ -4,8 +4,11 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Moon, Sun } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import FloatingElements from "./components/FloatingElements"
 import TweetGenerator from "./components/TweetGenerator"
+import RandomTweetGenerator from "./components/RandomTweetGenerator"
+
 
 export default function Page() {
   const [isDark, setIsDark] = useState(true)
@@ -54,9 +57,29 @@ export default function Page() {
             className="text-center mb-12"
           >
             <h1 className="text-4xl font-bold tracking-tight mb-4">Tweet Geni</h1>
-            <p className="text-muted-foreground text-lg">Generate engaging tweets for your SaaS product with AI</p>
+            <p className="text-muted-foreground text-lg">Generate engaging tweets for your content</p>
           </motion.div>
-          <TweetGenerator />
+
+          <Tabs defaultValue="saas" className="space-y-8">
+            <TabsList className="grid w-full grid-cols-2 max-w-[400px] mx-auto">
+              <TabsTrigger value="saas">SaaS Tweets</TabsTrigger>
+              <TabsTrigger value="random">Random Tweets</TabsTrigger>
+            </TabsList>
+            <TabsContent value="saas" className="space-y-4">
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-semibold mb-2">SaaS Tweet Generator</h2>
+                <p className="text-muted-foreground">Create compelling tweets for your SaaS product</p>
+              </div>
+              <TweetGenerator />
+            </TabsContent>
+            <TabsContent value="random" className="space-y-4">
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-semibold mb-2">Random Tweet Generator</h2>
+                <p className="text-muted-foreground">Generate viral tweets based on your mood and style</p>
+              </div>
+              <RandomTweetGenerator />
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
     </div>

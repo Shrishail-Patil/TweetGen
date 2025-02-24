@@ -29,35 +29,37 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
   const [copied, setCopied] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
+    e.preventDefault();
+    setIsLoading(true);
+  
     try {
+      // Send data to backend
       const response = await fetch("/api/gen-tweets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productDetails, tweetType }),
-      })
-
-      if (!response.ok) throw new Error("Failed to generate tweets")
-
-      const data = await response.json()
-      setTweet(data.tweet)
-
+      });
+  
+      if (!response.ok) throw new Error("Failed to generate tweets");
+  
+      const data = await response.json();
+      setTweet(data.tweet);
+  
+      // Call gatekeeper API (optional)
       const check = await fetch("/api/gatekeeper", {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
         body: data.tweet,
-      })
-
-      const checkData = await check.json()
-      setTweet(checkData.tweet)
+      });
+  
+      const checkData = await check.json();
+      setTweet(checkData.tweet);
     } catch (error) {
-      console.error(error)
+      console.error(error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleCopy = () => {
     if (!tweet) return
