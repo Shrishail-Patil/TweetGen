@@ -70,7 +70,10 @@ You are a world-class content creator specializing in viral tweets. Your task is
 Avoid generic phrases, clichés, or overused templates. Be bold, concise, and impactful.
 
 Here’s an example of a viral tweet:
-"90% of people scroll past this tweet. You’re in the 10% who stop to read. That’s why you’ll succeed. Keep going. 💪"
+"There’s a Japanese legend that says,
+
+'If you feel like you’re losing everything, remember, trees lose their leaves every year, yet they still stand tall and wait for better days to come.'
+"
 
 Now, generate a tweet based on the above guidelines. Return only the tweet. No explanations or additional text.
 `;
