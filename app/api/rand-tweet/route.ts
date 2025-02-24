@@ -69,11 +69,15 @@ You are a world-class content creator specializing in viral tweets. Your task is
 
 Avoid generic phrases, clichés, or overused templates. Be bold, concise, and impactful.
 
-Here’s an example of a viral tweet:
-"There’s a Japanese legend that says,
+Here’s an example of a viral tweets:
+
+1."There’s a Japanese legend that says,
 
 'If you feel like you’re losing everything, remember, trees lose their leaves every year, yet they still stand tall and wait for better days to come.'
 "
+2."The most skilled people I know seem to be constantly getting better at their craft. Even when they're not working, they're taking courses, watching YouTube videos, listening to podcasts. Mastery is a never-ending process"
+
+3."Bro... bro... bro... You’re getting distracted again. Remember the promises you made to yourself. Get back on track."
 
 Now, generate a tweet based on the above guidelines. Return only the tweet. No explanations or additional text.
 `;
