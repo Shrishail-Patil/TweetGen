@@ -30,7 +30,7 @@ Rate the tweet on a scale from 1 to 10 based on how engaging, human-like, and li
     });
 
     const evaluationResult = evaluationResponse.choices[0]?.message?.content?.trim() || "";
-    
+
     // If the response is a number 7 or higher, return the original tweet
     if (/^[7-9]|10$/.test(evaluationResult)) {
       return NextResponse.json({ tweet: bodyText });
@@ -42,15 +42,15 @@ Rate the tweet on a scale from 1 to 10 based on how engaging, human-like, and li
     // Prompt to generate an improved tweet
     const improvementPrompt = `The following tweet was evaluated and received a score below 7. Here is the feedback on how to improve it:
 
-Original Tweet:
-"${bodyText}"
+    Original Tweet:
+    "${bodyText}"
 
-Feedback:
-${evaluationResult}
+    Feedback:
+    ${evaluationResult}
 
-Using this feedback, rewrite the tweet to be **more engaging, human-like, and likely to go viral**. Maintain the original intent but make it **stronger** and **more compelling**.
+    Using this feedback, rewrite the tweet to be **more engaging, human-like, and likely to go viral**. Maintain the original intent but make it **stronger** and **more compelling**.
 
-Return only the new tweet. No explanations, no analysis, just the tweet.`;
+    Return only the new tweet. No explanations, no analysis, just the tweet.`;
 
     // Call Groq API to generate an improved tweet
     const improvementResponse = await groq.chat.completions.create({
