@@ -9,6 +9,7 @@ import FloatingElements from "./components/FloatingElements"
 import TweetGenerator from "./components/TweetGenerator"
 import RandomTweetGenerator from "./components/RandomTweetGenerator"
 import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export default function Page() {
   const [isDark, setIsDark] = useState(true)
@@ -17,6 +18,7 @@ export default function Page() {
     <div className={`min-h-screen w-full transition-colors duration-300 ${isDark ? "dark" : ""}`}>
       <div className="relative min-h-screen bg-background text-foreground">
       <Analytics/>
+      <SpeedInsights/>
         <FloatingElements />
         <nav className="fixed top-0 right-0 p-4 z-50">
           <Button
