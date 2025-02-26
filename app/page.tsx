@@ -10,6 +10,7 @@ import TweetGenerator from "./components/TweetGenerator"
 import RandomTweetGenerator from "./components/RandomTweetGenerator"
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import SupportButton from "./components/SupportButton"
 
 export default function Page() {
   const [isDark, setIsDark] = useState(false)
@@ -20,7 +21,8 @@ export default function Page() {
       <Analytics/>
       <SpeedInsights/>
         <FloatingElements />
-        <nav className="fixed top-0 right-0 p-4 z-50">
+        <nav className="fixed top-0 right-0 p-4 z-50 flex items-center gap-2">
+        <SupportButton />
           <Button
             variant="ghost"
             size="icon"
