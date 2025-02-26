@@ -12,7 +12,7 @@ import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export default function Page() {
-  const [isDark, setIsDark] = useState(true)
+  const [isDark, setIsDark] = useState(false)
 
   return (
     <div className={`min-h-screen w-full transition-colors duration-300 ${isDark ? "dark" : ""}`}>
