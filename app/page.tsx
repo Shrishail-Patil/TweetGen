@@ -11,17 +11,25 @@ import RandomTweetGenerator from "./components/RandomTweetGenerator"
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import SupportButton from "./components/SupportButton"
+import ComingSoonFeatures from "./components/ComingSoonFeatures"
+
 
 export default function Page() {
   const [isDark, setIsDark] = useState(false)
 
   return (
-    <div className={`min-h-screen w-full transition-colors duration-300 ${isDark ? "dark" : ""}`}>
+    <div className={`min-h-screen w-full transition-colors duration-300 ${isDark ? "dark" : ""}`} style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+  <style jsx>{`
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  `}</style>
       <div className="relative min-h-screen bg-background text-foreground">
       <Analytics/>
       <SpeedInsights/>
         <FloatingElements />
         <nav className="fixed top-0 right-0 p-4 z-50 flex items-center gap-2">
+        <ComingSoonFeatures />
         <SupportButton />
           <Button
             variant="ghost"
