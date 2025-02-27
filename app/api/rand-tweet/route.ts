@@ -6,7 +6,7 @@ const groq = new Groq({ apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY });
 export async function POST(req: NextRequest) {
   try {
     // Parse the JSON body
-    const { mood, style, length, tweetType } = await req.json();
+    const { mood, style, length, tweetType, structure, hashtags } = await req.json();
 
     // Validate required fields
     if (!tweetType?.trim()) {
@@ -54,6 +54,15 @@ export async function POST(req: NextRequest) {
     const selectedStyle = styles[style] || styles.casual;
     const selectedTopic = topics[tweetType] || topics.Humor;
 
+    // Define structure options
+    const structureOptions: Record<string, string> = {
+      lowercase: "all lowercase",
+      uppercase: "ALL UPPERCASE",
+      sentence: "Sentence case",
+    };
+
+    const selectedStructure = structureOptions[structure] || structureOptions.sentence;
+
     // Format the AI model prompt
     const formattedPrompt = `
 You are a world-class content creator specializing in viral tweets. Your task is to generate a tweet that will captivate audiences and spread rapidly. Follow these guidelines:
@@ -62,22 +71,15 @@ You are a world-class content creator specializing in viral tweets. Your task is
 2. **Style**: ${selectedStyle}
 3. **Topic**: ${selectedTopic}
 4. **Length**: Keep it under ${length} characters.
-5. **Engagement**: Use hooks, emotional triggers, or trending formats to grab attention instantly.
-6. **Relatability**: Make it feel personal and authentic. Use "you" or "we" to connect with the reader.
-7. **Memorability**: Include a surprising twist, bold statement, or unique perspective.
-8. **Actionability**: Encourage readers to like, retweet, or share their thoughts.
+5. **Structure**: The tweet should be in ${selectedStructure}.
+6. **Engagement**: Use hooks, emotional triggers, or trending formats to grab attention instantly.
+7. **Relatability**: Make it feel personal and authentic. Use "you" or "we" to connect with the reader.
+8. **Memorability**: Include a surprising twist, bold statement, or unique perspective.
+9. **Actionability**: Encourage readers to like, retweet, or share their thoughts.
+10. **Format**: Ensure the tweet is 1-3 lines long, easy to read, and follows the typical structure of successful tweets.
+11. **Hashtags**: ${hashtags ? "Include 1-2 relevant hashtags at the end of the tweet." : "Do not include any hashtags."}
 
 Avoid generic phrases, clichés, or overused templates. Be bold, concise, and impactful.
-
-Here’s an example of a viral tweets:
-
-1."There’s a Japanese legend that says,
-
-'If you feel like you’re losing everything, remember, trees lose their leaves every year, yet they still stand tall and wait for better days to come.'
-"
-2."The most skilled people I know seem to be constantly getting better at their craft. Even when they're not working, they're taking courses, watching YouTube videos, listening to podcasts. Mastery is a never-ending process"
-
-3."Bro... bro... bro... You’re getting distracted again. Remember the promises you made to yourself. Get back on track."
 
 Now, generate a tweet based on the above guidelines. Return only the tweet. No explanations or additional text.
 `;
@@ -88,7 +90,12 @@ Now, generate a tweet based on the above guidelines. Return only the tweet. No e
       model: "llama-3.3-70b-versatile",
     });
 
-    const generatedTweet = chatCompletion?.choices?.[0]?.message?.content?.trim() || "";
+    let generatedTweet = chatCompletion?.choices?.[0]?.message?.content?.trim() || "";
+
+    // Remove hashtags if the user disabled them
+    if (!hashtags) {
+      generatedTweet = generatedTweet.replace(/#\w+/g, "").trim();
+    }
 
     if (!generatedTweet) {
       return NextResponse.json({ error: "Failed to generate a tweet." }, { status: 500 });

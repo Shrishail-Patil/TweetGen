@@ -5,7 +5,7 @@ const groq = new Groq({ apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY });
 
 export async function POST(req: NextRequest) {
   try {
-    const { productDetails, tweetType } = await req.json();
+    const { productDetails, tweetType, structurePreference, casePreference } = await req.json();
 
     // Validate inputs
     if (!productDetails?.trim()) {
@@ -26,7 +26,12 @@ export async function POST(req: NextRequest) {
 
     // Select the prompt based on tweetType
     const tweetStylePrompt = tweetTypePrompts[tweetType] || tweetTypePrompts["CTA"];
-    console.log(tweetStylePrompt);
+
+    // Define structure preference
+    const structurePrompt = structurePreference === "short" ? "Keep the tweet to 1-3 lines, simple and easy to read." : "";
+
+    // Define case preference
+    const casePrompt = casePreference === "lowercase" ? "Write the entire tweet in lowercase." : "";
 
     // Generate tweet using Groq API
     const formattedPrompt = `You are a world-class SaaS product marketer skilled at crafting viral tweets. Write a tweet about the following product in a way that is:
@@ -37,6 +42,8 @@ export async function POST(req: NextRequest) {
     • Short and informative (shouldn't require additional context and easy to read)
     
     Style: ${tweetStylePrompt}
+    Structure: ${structurePrompt}
+    Case: ${casePrompt}
 
     Here’s the product:
 

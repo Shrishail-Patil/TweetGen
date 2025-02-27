@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider"
 import { Check, Copy, Loader2, Sparkles } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Switch } from "@/components/ui/switch" // Import the Switch component
 
 const moods = [
   { value: "happy", label: "Happy" },
@@ -39,6 +40,12 @@ const topics = [
   "Culture",
 ]
 
+const structures = [
+  { value: "lowercase", label: "Lowercase" },
+  { value: "uppercase", label: "UPPERCASE" },
+  { value: "sentence", label: "Sentence Case" },
+]
+
 export default function RandomTweetGenerator() {
   const [isLoading, setIsLoading] = useState(false)
   const [tweet, setTweet] = useState("")
@@ -47,6 +54,8 @@ export default function RandomTweetGenerator() {
   const [length, setLength] = useState([140])
   const [copied, setCopied] = useState(false)
   const [selectedTopic, setSelectedTopic] = useState("Tech")
+  const [selectedStructure, setSelectedStructure] = useState("sentence")
+  const [hashtags, setHashtags] = useState(true) // Default to including hashtags
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: FormEvent) => {
@@ -62,7 +71,9 @@ export default function RandomTweetGenerator() {
           mood,
           style,
           length: length[0],
-          tweetType: selectedTopic, // Align with backend expectations
+          tweetType: selectedTopic,
+          structure: selectedStructure,
+          hashtags, // Include hashtags toggle in the request
         }),
       })
 
@@ -144,6 +155,30 @@ export default function RandomTweetGenerator() {
                   {topic}
                 </Badge>
               ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Structure</label>
+            <Select value={selectedStructure} onValueChange={setSelectedStructure}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select structure" />
+              </SelectTrigger>
+              <SelectContent>
+                {structures.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Include Hashtags</label>
+            <div className="flex items-center gap-2">
+              <Switch checked={hashtags} onCheckedChange={setHashtags} />
+              <span className="text-sm">{hashtags ? "Enabled" : "Disabled"}</span>
             </div>
           </div>
         </div>

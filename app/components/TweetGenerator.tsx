@@ -21,11 +21,23 @@ const tweetTypes = [
   { value: "Inspirational", label: "Inspirational" },
 ]
 
+const structureOptions = [
+  { value: "short", label: "Short (1-3 lines)" },
+  { value: "long", label: "Long" },
+]
+
+const caseOptions = [
+  { value: "normal", label: "Normal" },
+  { value: "lowercase", label: "Lowercase" },
+]
+
 export default function TweetGenerator({ className }: TweetGeneratorProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [tweet, setTweet] = useState("")
   const [productDetails, setProductDetails] = useState("")
   const [tweetType, setTweetType] = useState("CTA")
+  const [structurePreference, setStructurePreference] = useState("short")
+  const [casePreference, setCasePreference] = useState("normal")
   const [copied, setCopied] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +49,7 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
       const response = await fetch("/api/gen-tweets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productDetails, tweetType }),
+        body: JSON.stringify({ productDetails, tweetType, structurePreference, casePreference }),
       });
   
       if (!response.ok) throw new Error("Failed to generate tweets");
@@ -107,6 +119,42 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
           </Select>
         </div>
 
+        <div className="space-y-2">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            Tweet Structure
+          </label>
+          <Select value={structurePreference} onValueChange={setStructurePreference}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select tweet structure" />
+            </SelectTrigger>
+            <SelectContent>
+              {structureOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            Tweet Case
+          </label>
+          <Select value={casePreference} onValueChange={setCasePreference}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select tweet case" />
+            </SelectTrigger>
+            <SelectContent>
+              {caseOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <Button disabled={isLoading} className="w-full">
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isLoading ? "Generating..." : "Generate Tweet"}
@@ -143,4 +191,3 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
     </motion.div>
   )
 }
-
