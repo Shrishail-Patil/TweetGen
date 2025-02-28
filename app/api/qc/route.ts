@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Extract constraints
-    const { structure, hashtags, length } = constraints;
+    const { structure, hashtags } = constraints;
 
     // Prompt to evaluate tweet quality
     const evaluationPrompt = `You are an expert tweet critic with deep knowledge of human psychology, social media engagement strategies, and the latest trends in crafting viral tweets. Your job is to analyze tweets and assess their appeal, authenticity, and engagement potential.
@@ -22,9 +22,15 @@ Here is the tweet:
 
 ${tweet}
 
-Rate the tweet on a scale from 1 to 10 based on how engaging, human-like, and likely to go viral it is.
-  - If the score is **7 or above**, return only the number—nothing else.
-  - If the score is **below 7**, provide **specific, actionable feedback** on how to improve it while maintaining its original intent.`;
+Rate the tweet on a scale from 1 to 10 based on the following criteria:
+1. **Engagement**: Does it grab attention instantly and encourage interaction (likes, retweets, replies)?
+2. **Authenticity**: Does it feel human-like, relatable, and genuine?
+3. **Memorability**: Does it leave a lasting impression or spark curiosity?
+4. **Clarity**: Is it easy to understand and concise?
+5. **Relevance**: Does it align with current trends or audience interests?
+
+If the score is **7 or above**, return only the number—nothing else.
+If the score is **below 7**, provide **specific, actionable feedback** on how to improve it while maintaining its original intent.`;
 
     // Call Groq API to evaluate the tweet
     const evaluationResponse = await groq.chat.completions.create({
@@ -51,12 +57,15 @@ Rate the tweet on a scale from 1 to 10 based on how engaging, human-like, and li
     Feedback:
     ${evaluationResult}
 
-    Using this feedback, rewrite the tweet to be **more engaging, human-like, and likely to go viral**. Maintain the original intent but make it **stronger** and **more compelling**.
-
-    Constraints:
-    - Structure: ${structure}
-    - Hashtags: ${hashtags ? "Include 1-2 relevant hashtags." : "Do not include hashtags."}
-    - Length: Keep it under ${length} characters.
+    Using this feedback, rewrite the tweet to be **more engaging, human-like, and likely to go viral**. Follow these guidelines:
+    1. **Engagement**: Use hooks, emotional triggers, or trending formats to grab attention instantly.
+    2. **Authenticity**: Make it feel personal and relatable. Use "you" or "we" to connect with the reader.
+    3. **Memorability**: Include a surprising twist, bold statement, or unique perspective.
+    4. **Clarity**: Keep it simple, concise, and easy to understand.
+    5. **Relevance**: Align it with current trends or audience interests.
+    6. **Length**: Ensure the tweet is between 100 and 280 characters.
+    7. **Structure**: The tweet should be in ${structure}.
+    8. **Hashtags**: ${hashtags ? "Include 1-2 relevant hashtags." : "Do not include hashtags."}
 
     Return only the new tweet. No explanations, no analysis, just the tweet.`;
 
@@ -71,6 +80,23 @@ Rate the tweet on a scale from 1 to 10 based on how engaging, human-like, and li
     // Remove hashtags if the user disabled them
     if (!hashtags) {
       improvedTweet = improvedTweet.replace(/#\w+/g, "").trim();
+    }
+
+    // Ensure the tweet is between 100 and 280 characters
+    if (improvedTweet.length < 100 || improvedTweet.length > 280) {
+      improvedTweet = improvedTweet.slice(0, 280); // Truncate if necessary
+      if (improvedTweet.length < 100) {
+        // If still too short, generate a new tweet
+        const retryPrompt = `Generate a tweet that is between 100 and 280 characters. It should be engaging, human-like, and likely to go viral. Follow these constraints:
+        - Structure: ${structure}
+        - Hashtags: ${hashtags ? "Include 1-2 relevant hashtags." : "Do not include hashtags."}
+        Return only the tweet.`;
+        const retryResponse = await groq.chat.completions.create({
+          messages: [{ role: "user", content: retryPrompt }],
+          model: "llama-3.3-70b-versatile",
+        });
+        improvedTweet = retryResponse.choices[0]?.message?.content?.trim() || "";
+      }
     }
 
     if (!improvedTweet) {
