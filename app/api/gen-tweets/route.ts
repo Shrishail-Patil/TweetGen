@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
       Inspirational: "Write something motivating and uplifting about the product.",
     };
 
+
     // Select the prompt based on tweetType
     const tweetStylePrompt = tweetTypePrompts[tweetType] || tweetTypePrompts["CTA"];
 
@@ -64,8 +65,11 @@ export async function POST(req: NextRequest) {
     // Call QC API
     const qcResponse = await fetch(`${process.env.NEXT_PUBLIC_VERCEL_URL}/api/qc`, {
       method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: generatedTweet,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tweet: generatedTweet,
+        constraints: { structure: structurePreference, hashtags: true, length: 280 }, // Adjust as needed
+      }),
     });
 
     if (!qcResponse.ok) {
@@ -73,8 +77,13 @@ export async function POST(req: NextRequest) {
     }
 
     const qcResult = await qcResponse.json();
+    console.log("QC Result:", qcResult);
 
-    return NextResponse.json({ tweet: generatedTweet, qc: qcResult });
+    // Extract the improved tweet from the QC result
+    const improvedTweet = qcResult.tweet;
+
+    // Return the improved tweet
+    return NextResponse.json({ tweet: improvedTweet });
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

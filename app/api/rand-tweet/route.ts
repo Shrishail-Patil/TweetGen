@@ -6,7 +6,7 @@ const groq = new Groq({ apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY });
 export async function POST(req: NextRequest) {
   try {
     // Parse the JSON body
-    const { mood, style, length, tweetType, structure, hashtags } = await req.json();
+    const { mood, style, length, tweetType, structure, hashtags } : { mood: string, style: string, length: number, tweetType: string, structure: keyof typeof structureOptions, hashtags: boolean } = await req.json();
 
     // Validate required fields
     if (!tweetType?.trim()) {
@@ -15,7 +15,6 @@ export async function POST(req: NextRequest) {
     if (!mood || !style || !length) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
-
     // Define moods
     const moods: Record<string, string> = {
       happy: "Express joy and positivity in your message. Use uplifting and optimistic language.",
@@ -49,13 +48,14 @@ export async function POST(req: NextRequest) {
       Culture: "Examine societal trends, traditions, and pop culture. Make it relevant and engaging.",
     };
 
+
     // Validate and default values
     const selectedMood = moods[mood] || moods.happy;
     const selectedStyle = styles[style] || styles.casual;
     const selectedTopic = topics[tweetType] || topics.Humor;
 
     // Define structure options
-    const structureOptions: Record<string, string> = {
+    const structureOptions = {
       lowercase: "all lowercase",
       uppercase: "ALL UPPERCASE",
       sentence: "Sentence case",
@@ -106,8 +106,11 @@ Now, generate a tweet based on the above guidelines. Return only the tweet. No e
     // Call the QC API to check tweet quality
     const qcResponse = await fetch(`${process.env.NEXT_PUBLIC_VERCEL_URL}/api/qc`, {
       method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: generatedTweet,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tweet: generatedTweet,
+        constraints: { structure, hashtags, length },
+      }),
     });
 
     if (!qcResponse.ok) {
@@ -115,8 +118,13 @@ Now, generate a tweet based on the above guidelines. Return only the tweet. No e
     }
 
     const qcResult = await qcResponse.json();
+    console.log("QC Result:", qcResult);
 
-    return NextResponse.json({ tweet: generatedTweet, qc: qcResult });
+    // Extract the improved tweet from the QC result
+    const improvedTweet = qcResult.tweet;
+
+    // Return the improved tweet
+    return NextResponse.json({ tweet: improvedTweet });
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
