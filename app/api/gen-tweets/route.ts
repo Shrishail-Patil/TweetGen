@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     let supabaseError = null;
 
     while (retryCount < maxRetries) {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('UserData')
         .insert([
           { 
