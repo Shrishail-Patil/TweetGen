@@ -1,7 +1,15 @@
 import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from '@supabase/supabase-js';
 
+// Initialize Groq client
 const groq = new Groq({ apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY });
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
 
 // Define tweet type prompts
 const TWEET_TYPE_PROMPTS: Record<string, string> = {
@@ -35,11 +43,63 @@ export async function POST(req: NextRequest) {
     // Parse and validate the request body
     const { productDetails, tweetType, structurePreference, casePreference, url, hashtags } = await req.json();
 
+    // Log the received data for debugging
+    // console.log("Received data:", {
+    //   productDetails,
+    //   tweetType,
+    //   structurePreference,
+    //   casePreference,
+    //   url,
+    //   hashtags,
+    // });
+
+    // Validate required fields
     if (!productDetails?.trim()) {
       return NextResponse.json({ error: "Product details are required" }, { status: 400 });
     }
     if (!tweetType) {
       return NextResponse.json({ error: "Tweet type is required" }, { status: 400 });
+    }
+
+    // Insert data into Supabase with retry mechanism
+    let retryCount = 0;
+    const maxRetries = 3;
+    let supabaseError = null;
+
+    while (retryCount < maxRetries) {
+      const { data, error } = await supabase
+        .from('UserData')
+        .insert([
+          { 
+            productdetails:productDetails, 
+            tweettype:tweetType, 
+            structurepreference:structurePreference, 
+            casepreference:casePreference, 
+            url: url || null, // Convert empty string to NULL
+            hashtags: Boolean(hashtags) // Convert to boolean
+          },
+        ])
+        .select(); // Use .select() to return the inserted data
+
+      if (error) {
+        supabaseError = error;
+        // console.error(`Supabase Insert Error (Attempt ${retryCount + 1}):`, {
+        //   message: error.message,
+        //   code: error.code,
+        //   details: error.details,
+        //   hint: error.hint,
+        // });
+        retryCount++;
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second before retrying
+      } else {
+        // console.log("Data inserted into Supabase:", data);
+        supabaseError = null;
+        break; // Exit the loop if successful
+      }
+    }
+
+    if (supabaseError) {
+      return NextResponse.json({ error: "Failed to insert data into Supabase after multiple attempts" }, { status: 500 });
     }
 
     // Select the prompt based on tweetType
