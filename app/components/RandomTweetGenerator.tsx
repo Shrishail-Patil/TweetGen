@@ -1,14 +1,15 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import type { FormEvent } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
-import { Check, Copy, Loader2, Sparkles } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch" // Import the Switch component
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Check, Copy, Loader2, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner"; // For better toast notifications
 
 const moods = [
   { value: "happy", label: "Happy" },
@@ -17,7 +18,11 @@ const moods = [
   { value: "motivational", label: "Motivational" },
   { value: "controversial", label: "Controversial" },
   { value: "philosophical", label: "Philosophical" },
-]
+  { value: "nostalgic", label: "Nostalgic" },
+  { value: "mysterious", label: "Mysterious" },
+  { value: "romantic", label: "Romantic" },
+  { value: "adventurous", label: "Adventurous" },
+];
 
 const styles = [
   { value: "viral", label: "Viral" },
@@ -25,7 +30,12 @@ const styles = [
   { value: "casual", label: "Casual" },
   { value: "professional", label: "Professional" },
   { value: "storytelling", label: "Storytelling" },
-]
+  { value: "poetic", label: "Poetic" },
+  { value: "informative", label: "Informative" },
+  { value: "inspirational", label: "Inspirational" },
+  { value: "satirical", label: "Satirical" },
+  { value: "dramatic", label: "Dramatic" },
+];
 
 const topics = [
   "Tech",
@@ -38,30 +48,39 @@ const topics = [
   "Wisdom",
   "Humor",
   "Culture",
-]
+  "Health",
+  "Environment",
+  "Education",
+  "Travel",
+  "Food",
+];
 
 const structures = [
   { value: "lowercase", label: "Lowercase" },
   { value: "uppercase", label: "UPPERCASE" },
   { value: "sentence", label: "Sentence Case" },
-]
+  { value: "title", label: "Title Case" },
+  { value: "alternating", label: "AlTeRnAtInG cAsE" },
+  { value: "random", label: "RaNDoM cASe" },
+];
 
 export default function RandomTweetGenerator() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [tweet, setTweet] = useState("")
-  const [mood, setMood] = useState("happy")
-  const [style, setStyle] = useState("viral")
-  const [length, setLength] = useState([140])
-  const [copied, setCopied] = useState(false)
-  const [selectedTopic, setSelectedTopic] = useState("Tech")
-  const [selectedStructure, setSelectedStructure] = useState("sentence")
-  const [hashtags, setHashtags] = useState(true) // Default to including hashtags
-  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false);
+  const [tweet, setTweet] = useState("");
+  const [mood, setMood] = useState("happy");
+  const [style, setStyle] = useState("viral");
+  const [length, setLength] = useState([140]);
+  const [copied, setCopied] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState("Tech");
+  const [selectedStructure, setSelectedStructure] = useState("sentence");
+  const [hashtags, setHashtags] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError(null)
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    setTweet(""); // Clear previous tweet
 
     try {
       const response = await fetch("/api/rand-tweet", {
@@ -73,27 +92,36 @@ export default function RandomTweetGenerator() {
           length: length[0],
           tweetType: selectedTopic,
           structure: selectedStructure,
-          hashtags, // Include hashtags toggle in the request
+          hashtags,
         }),
-      })
+      });
 
-      if (!response.ok) throw new Error("Failed to generate tweet")
+      if (!response.ok) {
+        throw new Error("Failed to generate tweet. Please try again.");
+      }
 
-      const data = await response.json()
-      setTweet(data.tweet || "No tweet generated.")
+      const data = await response.json();
+      if (!data.tweet) {
+        throw new Error("No tweet generated. Please try again.");
+      }
+
+      setTweet(data.tweet);
+      toast.success("Tweet generated successfully!");
     } catch (err) {
-      setError((err as Error).message || "Something went wrong.")
+      setError((err as Error).message);
+      toast.error((err as Error).message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleCopy = () => {
-    if (!tweet) return
-    navigator.clipboard.writeText(tweet)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    if (!tweet) return;
+    navigator.clipboard.writeText(tweet);
+    setCopied(true);
+    toast.success("Tweet copied to clipboard!");
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <motion.div
@@ -104,6 +132,7 @@ export default function RandomTweetGenerator() {
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
+          {/* Mood Selector */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Mood</label>
             <Select value={mood} onValueChange={setMood}>
@@ -120,6 +149,7 @@ export default function RandomTweetGenerator() {
             </Select>
           </div>
 
+          {/* Style Selector */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Style</label>
             <Select value={style} onValueChange={setStyle}>
@@ -136,12 +166,14 @@ export default function RandomTweetGenerator() {
             </Select>
           </div>
 
+          {/* Tweet Length Slider */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Tweet Length</label>
             <Slider value={length} onValueChange={setLength} max={280} min={60} step={10} className="py-4" />
             <p className="text-sm text-muted-foreground text-right">{length[0]} characters</p>
           </div>
 
+          {/* Topic Selector */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Topic</label>
             <div className="flex flex-wrap gap-2">
@@ -158,6 +190,7 @@ export default function RandomTweetGenerator() {
             </div>
           </div>
 
+          {/* Structure Selector */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Structure</label>
             <Select value={selectedStructure} onValueChange={setSelectedStructure}>
@@ -174,6 +207,7 @@ export default function RandomTweetGenerator() {
             </Select>
           </div>
 
+          {/* Hashtags Toggle */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Include Hashtags</label>
             <div className="flex items-center gap-2">
@@ -183,14 +217,17 @@ export default function RandomTweetGenerator() {
           </div>
         </div>
 
+        {/* Generate Button */}
         <Button disabled={isLoading} className="w-full">
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
           {isLoading ? "Generating..." : "Generate Random Tweet"}
         </Button>
 
+        {/* Error Message */}
         {error && <p className="text-sm text-red-500">{error}</p>}
       </form>
 
+      {/* Generated Tweet */}
       <AnimatePresence mode="wait">
         {tweet && (
           <motion.div
@@ -219,5 +256,5 @@ export default function RandomTweetGenerator() {
         )}
       </AnimatePresence>
     </motion.div>
-  )
+  );
 }

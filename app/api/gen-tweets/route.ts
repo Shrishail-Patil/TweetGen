@@ -3,11 +3,38 @@ import { NextRequest, NextResponse } from "next/server";
 
 const groq = new Groq({ apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY });
 
+// Define tweet type prompts
+const TWEET_TYPE_PROMPTS: Record<string, string> = {
+  CTA: "Focus on a strong call-to-action, encouraging engagement or sign-ups. Use urgency and curiosity to drive clicks.",
+  Casual: "Write in a fun, relaxed, and friendly tone. Make it feel like a conversation with a friend.",
+  Educational: "Share an insightful or informative tweet about the product. Use data, facts, or tips to add value.",
+  Funny: "Make it witty and humorous while still being relevant. Use clever wordplay or relatable humor.",
+  Inspirational: "Write something motivating and uplifting about the product. Use powerful language to inspire action.",
+  Viral: "Craft a tweet designed to go viral. Use emotional triggers, bold statements, or trending formats.",
+  Controversial: "Challenge opinions and spark discussion. Be bold but respectful. Address current hot topics.",
+  Storytelling: "Engage readers by narrating a relatable or impactful story. Use a beginning, middle, and end.",
+};
+
+// Define structure preferences
+const STRUCTURE_PROMPTS: Record<string, string> = {
+  short: "Keep the tweet to 1-3 lines, simple and easy to read.",
+  long: "Write a detailed tweet with multiple lines, providing more context.",
+};
+
+// Define case preferences
+const CASE_PROMPTS: Record<string, string> = {
+  lowercase: "Write the entire tweet in lowercase.",
+  uppercase: "WRITE THE ENTIRE TWEET IN UPPERCASE.",
+  sentence: "Write the tweet in sentence case.",
+  title: "Write the tweet in title case.",
+  alternating: "Write the tweet in alternating case (e.g., AlTeRnAtInG cAsE).",
+};
+
 export async function POST(req: NextRequest) {
   try {
-    const { productDetails, tweetType, structurePreference, casePreference } = await req.json();
+    // Parse and validate the request body
+    const { productDetails, tweetType, structurePreference, casePreference, url, hashtags } = await req.json();
 
-    // Validate inputs
     if (!productDetails?.trim()) {
       return NextResponse.json({ error: "Product details are required" }, { status: 400 });
     }
@@ -15,45 +42,51 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Tweet type is required" }, { status: 400 });
     }
 
-    // Define tweet type prompts
-    const tweetTypePrompts: Record<string, string> = {
-      CTA: "Focus on a strong call-to-action, encouraging engagement or sign-ups.",
-      Casual: "Write in a fun, relaxed, and friendly tone.",
-      Educational: "Share an insightful or informative tweet about the product.",
-      Funny: "Make it witty and humorous while still being relevant.",
-      Inspirational: "Write something motivating and uplifting about the product.",
-    };
-
-
     // Select the prompt based on tweetType
-    const tweetStylePrompt = tweetTypePrompts[tweetType] || tweetTypePrompts["CTA"];
+    const tweetStylePrompt = TWEET_TYPE_PROMPTS[tweetType] || TWEET_TYPE_PROMPTS["CTA"];
 
-    // Define structure preference
-    const structurePrompt = structurePreference === "short" ? "Keep the tweet to 1-3 lines, simple and easy to read." : "";
+    // Define structure and case preferences
+    const structurePrompt = STRUCTURE_PROMPTS[structurePreference] || "";
+    const casePrompt = CASE_PROMPTS[casePreference] || "";
 
-    // Define case preference
-    const casePrompt = casePreference === "lowercase" ? "Write the entire tweet in lowercase." : "";
+    // Include URL in the prompt if provided
+    const urlPrompt = url ? `Include this URL in the tweet: ${url}` : "Do not include any URL in the tweet.";
+
+    // Include hashtags in the prompt if enabled
+    const hashtagsPrompt = hashtags ? "Include 1-2 relevant hashtags at the end of the tweet." : "Do not include any hashtags.";
 
     // Generate tweet using Groq API
-    const formattedPrompt = `You are a world-class SaaS product marketer skilled at crafting viral tweets. Write a tweet about the following product in a way that is:
-    • Simple (easy to understand)
-    • Human-like (casual, friendly, and relatable)
-    • Attention-grabbing (stopping the scroll instantly)
-    • Memorable (leaves a lasting impression and sparks curiosity)
-    • Short and informative (shouldn't require additional context and easy to read)
-    
-    Style: ${tweetStylePrompt}
-    Structure: ${structurePrompt}
-    Case: ${casePrompt}
+    const formattedPrompt = `
+You are a world-class SaaS product marketer skilled at crafting viral tweets. Write a tweet about the following product in a way that is:
+• **Simple**: Easy to understand.
+• **Human-like**: Casual, friendly, and relatable.
+• **Attention-grabbing**: Stops the scroll instantly.
+• **Memorable**: Leaves a lasting impression and sparks curiosity.
+• **Short and informative**: Shouldn't require additional context and is easy to read.
 
-    Here’s the product:
+**Style**: ${tweetStylePrompt}
+**Structure**: ${structurePrompt}
+**Case**: ${casePrompt}
+**URL**: ${urlPrompt}
+**Hashtags**: ${hashtagsPrompt}
 
-    ${productDetails}
+**Product Details**:
+${productDetails}
 
-    Return only the tweet. No explanations, no analysis, no additional text—just the tweet.`;
+**Instructions**:
+- Return only the tweet.
+- No explanations, no analysis, no additional text—just the tweet.
+- Ensure the tweet is highly engaging and optimized for virality.
+- Use trending formats, emotional triggers, or bold statements to grab attention.
+- If a URL is provided, include it naturally in the tweet.
+- If hashtags are enabled, include 1-2 relevant hashtags at the end.
+`;
+
     const chatCompletion = await groq.chat.completions.create({
       messages: [{ role: "user", content: formattedPrompt }],
       model: "llama-3.3-70b-versatile",
+      temperature: 0.9, // Increase creativity
+      max_tokens: 280, // Limit to tweet length
     });
 
     const generatedTweet = chatCompletion.choices[0]?.message?.content?.trim() || "";
@@ -62,13 +95,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to generate tweet" }, { status: 500 });
     }
 
-    // Call QC API
+    // Call QC API for quality check
     const qcResponse = await fetch(`${process.env.NEXT_PUBLIC_VERCEL_URL}/api/qc`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         tweet: generatedTweet,
-        constraints: { structure: structurePreference, hashtags: true, length: 280 }, // Adjust as needed
+        constraints: {
+          structure: structurePreference,
+          hashtags,
+          length: 280,
+        },
       }),
     });
 

@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Check, Copy, Loader2 } from "lucide-react"
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Check, Copy, Loader2 } from "lucide-react";
+import { toast } from "sonner"; // For toast notifications
+import { Switch } from "@/components/ui/switch"; // Import the Switch component
 
 interface TweetGeneratorProps {
-  className?: string
+  className?: string;
 }
 
 const tweetTypes = [
@@ -19,66 +19,76 @@ const tweetTypes = [
   { value: "Educational", label: "Educational" },
   { value: "Funny", label: "Funny" },
   { value: "Inspirational", label: "Inspirational" },
-]
+  { value: "Viral", label: "Viral" },
+  { value: "Controversial", label: "Controversial" },
+  { value: "Storytelling", label: "Storytelling" },
+];
 
 const structureOptions = [
   { value: "short", label: "Short (1-3 lines)" },
   { value: "long", label: "Long" },
-]
+];
 
 const caseOptions = [
   { value: "normal", label: "Normal" },
   { value: "lowercase", label: "Lowercase" },
-]
+  { value: "uppercase", label: "UPPERCASE" },
+  { value: "sentence", label: "Sentence Case" },
+  { value: "title", label: "Title Case" },
+  { value: "alternating", label: "AlTeRnAtInG cAsE" },
+];
 
 export default function TweetGenerator({ className }: TweetGeneratorProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [tweet, setTweet] = useState("")
-  const [productDetails, setProductDetails] = useState("")
-  const [tweetType, setTweetType] = useState("CTA")
-  const [structurePreference, setStructurePreference] = useState("short")
-  const [casePreference, setCasePreference] = useState("normal")
-  const [copied, setCopied] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const [tweet, setTweet] = useState("");
+  const [productDetails, setProductDetails] = useState("");
+  const [tweetType, setTweetType] = useState("CTA");
+  const [structurePreference, setStructurePreference] = useState("short");
+  const [casePreference, setCasePreference] = useState("normal");
+  const [url, setUrl] = useState("");
+  const [hashtags, setHashtags] = useState(true); // Hashtags toggle state
+  const [copied, setCopied] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-  
+    setTweet(""); // Clear previous tweet
+
     try {
       // Send data to backend
       const response = await fetch("/api/gen-tweets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productDetails, tweetType, structurePreference, casePreference }),
+        body: JSON.stringify({
+          productDetails,
+          tweetType,
+          structurePreference,
+          casePreference,
+          url,
+          hashtags, // Include hashtags toggle in the request
+        }),
       });
-  
-      if (!response.ok) throw new Error("Failed to generate tweets");
-  
+
+      if (!response.ok) throw new Error("Failed to generate tweet");
+
       const data = await response.json();
       setTweet(data.tweet);
-  
-      // Call gatekeeper API (optional)
-      const check = await fetch("/api/gatekeeper", {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: data.tweet,
-      });
-  
-      const checkData = await check.json();
-      setTweet(checkData.tweet);
+      toast.success("Tweet generated successfully!");
     } catch (error) {
       console.error(error);
+      toast.error("Failed to generate tweet. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCopy = () => {
-    if (!tweet) return
-    navigator.clipboard.writeText(tweet)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    if (!tweet) return;
+    navigator.clipboard.writeText(tweet);
+    setCopied(true);
+    toast.success("Tweet copied to clipboard!");
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <motion.div
@@ -88,6 +98,7 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
       className={`space-y-8 ${className}`}
     >
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Product Details */}
         <div className="space-y-2">
           <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
             Product Details
@@ -101,6 +112,21 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
           />
         </div>
 
+        {/* URL Field */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            URL (Optional)
+          </label>
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://example.com"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          />
+        </div>
+
+        {/* Tweet Type */}
         <div className="space-y-2">
           <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
             Tweet Type
@@ -119,6 +145,7 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
           </Select>
         </div>
 
+        {/* Tweet Structure */}
         <div className="space-y-2">
           <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
             Tweet Structure
@@ -137,6 +164,7 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
           </Select>
         </div>
 
+        {/* Tweet Case */}
         <div className="space-y-2">
           <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
             Tweet Case
@@ -155,12 +183,23 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
           </Select>
         </div>
 
+        {/* Hashtags Toggle */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Include Hashtags</label>
+          <div className="flex items-center gap-2">
+            <Switch checked={hashtags} onCheckedChange={setHashtags} />
+            <span className="text-sm">{hashtags ? "Enabled" : "Disabled"}</span>
+          </div>
+        </div>
+
+        {/* Generate Button */}
         <Button disabled={isLoading} className="w-full">
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isLoading ? "Generating..." : "Generate Tweet"}
         </Button>
       </form>
 
+      {/* Generated Tweet */}
       <AnimatePresence mode="wait">
         {tweet && (
           <motion.div
@@ -189,5 +228,5 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
         )}
       </AnimatePresence>
     </motion.div>
-  )
+  );
 }
