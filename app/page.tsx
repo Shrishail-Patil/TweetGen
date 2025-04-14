@@ -248,8 +248,8 @@ export default function LandingPage() {
                 S
               </div>
               <div>
-                <h4 className="font-bold">Sarah Johnson</h4>
-                <p className="text-gray-500 text-sm">Content Creator</p>
+                <h4 className="font-bold">Bhagya Charan</h4>
+                <p className="text-gray-500 text-sm">Aspiring asshole</p>
               </div>
             </div>
             <p className="text-gray-700">
@@ -275,7 +275,7 @@ export default function LandingPage() {
                 M
               </div>
               <div>
-                <h4 className="font-bold">Mark Thompson</h4>
+                <h4 className="font-bold">Anil Borig</h4>
                 <p className="text-gray-500 text-sm">SaaS Founder</p>
               </div>
             </div>

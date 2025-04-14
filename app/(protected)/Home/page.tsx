@@ -1,64 +1,69 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/utils/supabase/supabaseClient';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Moon, Sun } from "lucide-react";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import FloatingElements from "../../components/FloatingElements";
-import TweetGenerator from "../../components/TweetGenerator";
-import RandomTweetGenerator from "../../components/RandomTweetGenerator";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
-import SupportButton from "../../components/SupportButton";
-import LogoutButton from "../../components/LogoutButton";
-import UserProfile from "../../components/UserProfile";
-import Bookmarks from '@/app/components/Bookmarks';
-import FeedbackButton from '@/app/components/FeedbackDialogue';
+import { useEffect, useState } from "react"
+import { supabase } from "@/utils/supabase/supabaseClient"
+import { useRouter } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
+import { Button } from "@/components/ui/button"
+import { Menu, Moon, Sun, X } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import FloatingElements from "../../components/FloatingElements"
+import TweetGenerator from "../../components/TweetGenerator"
+import RandomTweetGenerator from "../../components/RandomTweetGenerator"
+import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import SupportButton from "../../components/SupportButton"
+import LogoutButton from "../../components/LogoutButton"
+import UserProfile from "../../components/UserProfile"
+import Bookmarks from "@/app/components/Bookmarks"
+import FeedbackButton from "@/app/components/FeedbackDialogue"
 
 // Updated to enforce type compatibility properly
 
 export default function Page() {
-  const [isDark, setIsDark] = useState(false);
-  const [sessionUser, setSessionUser] = useState<{ email: string; name?: string } | null>(null);
-  // const [loading, setLoading] = useState(true);
-  // const [user, setUser] = useState<{ email: string } | null>(null);
-  const router = useRouter();
+  const [isDark, setIsDark] = useState(false)
+  const [sessionUser, setSessionUser] = useState<{ email: string; name?: string } | null>(null)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
+      const { data, error } = await supabase.auth.getUser()
 
       if (error || !data.user) {
-        console.error('[DASHBOARD] Error fetching user:', error?.message);
-        router.replace('/login');
+        console.error("[DASHBOARD] Error fetching user:", error?.message)
+        router.replace("/login")
       } else {
         // setUser(data.user as any);
         setSessionUser({
           email: data.user.email as string,
           name: data.user.user_metadata?.full_name || data.user.user_metadata?.name,
-        });
+        })
       }
-    };
+    }
 
-    fetchUser();
-  }, [router]);
+    fetchUser()
+  }, [router])
+
+  // Close mobile menu when screen size changes to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileMenuOpen(false)
+      }
+    }
+
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
 
   if (!sessionUser) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Loading user information...</p>
       </div>
-    );
+    )
   }
-
 
   return (
     <div
@@ -76,8 +81,21 @@ export default function Page() {
         <SpeedInsights />
         <FloatingElements />
 
-        {/* Top Navigation */}
-        <nav className="fixed top-0 right-0 p-4 z-50 flex items-center gap-2">
+        {/* Mobile Menu Toggle Button */}
+        <div className="fixed top-4 right-4 z-50 md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="rounded-full hover:bg-muted"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
+
+        {/* Desktop Navigation */}
+        <nav className="fixed top-0 right-0 p-4 z-40 hidden md:flex items-center gap-2">
           <FeedbackButton />
           <Bookmarks />
           <SupportButton />
@@ -115,6 +133,35 @@ export default function Page() {
           </Button>
         </nav>
 
+        {/* Mobile Navigation Menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, x: 300 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 300 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="fixed inset-0 z-40 bg-background/95 backdrop-blur-sm md:hidden"
+            >
+              <div className="flex flex-col items-center justify-center h-full gap-6 p-4">
+                <FeedbackButton />
+                <Bookmarks />
+                <SupportButton />
+                <UserProfile user={sessionUser} />
+                <LogoutButton />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsDark(!isDark)}
+                  className="rounded-full hover:bg-muted"
+                >
+                  {isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <main className="container max-w-5xl mx-auto px-4 py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -122,12 +169,8 @@ export default function Page() {
             transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
-            <h1 className="text-4xl font-bold tracking-tight mb-4">
-              Tweet Geni
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Generate engaging tweets for your content
-            </p>
+            <h1 className="text-4xl font-bold tracking-tight mb-4">Tweet Geni</h1>
+            <p className="text-muted-foreground text-lg">Generate engaging tweets for your content</p>
           </motion.div>
 
           <Tabs defaultValue="saas" className="space-y-8">
@@ -137,23 +180,15 @@ export default function Page() {
             </TabsList>
             <TabsContent value="saas" className="space-y-4">
               <div className="text-center mb-6">
-                <h2 className="text-xl font-semibold mb-2">
-                  SaaS Tweet Generator
-                </h2>
-                <p className="text-muted-foreground">
-                  Create compelling tweets for your SaaS product
-                </p>
+                <h2 className="text-xl font-semibold mb-2">SaaS Tweet Generator</h2>
+                <p className="text-muted-foreground">Create compelling tweets for your SaaS product</p>
               </div>
               <TweetGenerator />
             </TabsContent>
             <TabsContent value="random" className="space-y-4">
               <div className="text-center mb-6">
-                <h2 className="text-xl font-semibold mb-2">
-                  Random Tweet Generator
-                </h2>
-                <p className="text-muted-foreground">
-                  Generate viral tweets based on your mood and style
-                </p>
+                <h2 className="text-xl font-semibold mb-2">Random Tweet Generator</h2>
+                <p className="text-muted-foreground">Generate viral tweets based on your mood and style</p>
               </div>
               <RandomTweetGenerator />
             </TabsContent>
@@ -161,5 +196,5 @@ export default function Page() {
         </main>
       </div>
     </div>
-  );
+  )
 }
