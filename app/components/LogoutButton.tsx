@@ -2,13 +2,11 @@
 
 import { Button } from "@/components/ui/button"
 import { LogOut } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import Cookies from "js-cookie"
 import { useState } from "react"
 
 export default function LogoutButton() {
-  const router = useRouter()
   const supabase = createClientComponentClient()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 

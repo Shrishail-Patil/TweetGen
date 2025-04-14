@@ -18,7 +18,6 @@ import RandomTweetGenerator from "../../components/RandomTweetGenerator";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import SupportButton from "../../components/SupportButton";
-import ComingSoonFeatures from "../../components/ComingSoonFeatures";
 import LogoutButton from "../../components/LogoutButton";
 import UserProfile from "../../components/UserProfile";
 import Bookmarks from '@/app/components/Bookmarks';

@@ -253,9 +253,9 @@ export default function LandingPage() {
               </div>
             </div>
             <p className="text-gray-700">
-              "TweetGeni has completely transformed my social media strategy. I used to spend hours crafting tweets, now
-              I can generate a week's worth in minutes!"
-            </p>
+  &quot;TweetGeni has completely transformed my social media strategy. I used to spend hours crafting tweets, now
+  I can generate a week&apos;s worth in minutes!&quot;
+</p>
             <div className="flex mt-4">
               <Award className="h-5 w-5 text-orange-500" />
               <Award className="h-5 w-5 text-orange-500" />
@@ -280,9 +280,9 @@ export default function LandingPage() {
               </div>
             </div>
             <p className="text-gray-700">
-              "The engagement on our product tweets has increased by 43% since we started using TweetGeni. The AI
-              understands our brand voice perfectly."
-            </p>
+  &quot;The engagement on our product tweets has increased by 43% since we started using TweetGeni. The AI
+  understands our brand voice perfectly.&quot;
+</p>
             <div className="flex mt-4">
               <Award className="h-5 w-5 text-orange-500" />
               <Award className="h-5 w-5 text-orange-500" />
@@ -307,9 +307,9 @@ export default function LandingPage() {
               </div>
             </div>
             <p className="text-gray-700">
-              "As someone managing multiple accounts, TweetGeni has been a game-changer. The variety of styles and tones
-              available means each account maintains its unique voice."
-            </p>
+  &quot;As someone managing multiple accounts, TweetGeni has been a game-changer. The variety of styles and tones
+  available means each account maintains its unique voice.&quot;
+</p>
             <div className="flex mt-4">
               <Award className="h-5 w-5 text-orange-500" />
               <Award className="h-5 w-5 text-orange-500" />
