@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, Copy, Loader2 } from "lucide-react";
-import { toast } from "sonner"; // For toast notifications
 import { Switch } from "@/components/ui/switch"; // Import the Switch component
+import { Bookmark } from "lucide-react";
+import { supabase } from "@/utils/supabase/supabaseClient";
+import { toast } from "sonner";
 
 interface TweetGeneratorProps {
   className?: string;
@@ -48,6 +50,7 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
   const [url, setUrl] = useState("");
   const [hashtags, setHashtags] = useState(true); // Hashtags toggle state
   const [copied, setCopied] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,6 +92,77 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
     toast.success("Tweet copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const handleBookmark = async () => {
+    if (!tweet) return;
+  
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+  
+    if (sessionError || !session) {
+      toast.error("You must be logged in to bookmark tweets.");
+      return;
+    }
+  
+    const userId = session.user.id;
+  
+    // Check if the bookmark already exists
+    const { data: existingBookmark, error: fetchError } = await supabase
+      .from("bookmarks")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("tweet", tweet)
+      .maybeSingle();
+  
+    if (fetchError) {
+      console.error("Error checking bookmark:", fetchError);
+      toast.error("Failed to check bookmark status.");
+      return;
+    }
+  
+    if (existingBookmark) {
+      // Delete the existing bookmark
+      const { error: deleteError } = await supabase
+        .from("bookmarks")
+        .delete()
+        .eq("id", existingBookmark.id);
+  
+      if (deleteError) {
+        console.error("Error deleting bookmark:", deleteError);
+        toast.error("Failed to remove bookmark.");
+      } else {
+        setBookmarked(false);
+        toast.success("Bookmark removed.");
+      }
+    } else {
+      // Insert a new bookmark
+      const { error: insertError } = await supabase.from("bookmarks").insert([
+        {
+          user_id: userId,
+          tweet,
+          metadata: {
+            tweetType,
+            structurePreference,
+            casePreference,
+            url,
+            hashtags,
+          },
+        },
+      ]);
+  
+      if (insertError) {
+        console.error("Error saving bookmark:", insertError);
+        toast.error("Failed to save bookmark.");
+      } else {
+        setBookmarked(true);
+        toast.success("Tweet bookmarked successfully!");
+      }
+    }
+  };
+  
+  
 
   return (
     <motion.div
@@ -208,9 +282,11 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
             exit={{ opacity: 0, y: -20 }}
             className="rounded-lg border bg-card p-6 shadow-sm"
           >
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between ">
               <p className="text-card-foreground leading-relaxed">{tweet}</p>
               <Button size="icon" variant="ghost" onClick={handleCopy} className="shrink-0">
+
+
                 <AnimatePresence mode="wait">
                   {copied ? (
                     <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
@@ -223,6 +299,20 @@ export default function TweetGenerator({ className }: TweetGeneratorProps) {
                   )}
                 </AnimatePresence>
               </Button>
+              <Button size="icon" variant="ghost" onClick={handleBookmark} className="shrink-0">
+              <AnimatePresence mode="wait">
+                  {bookmarked ? (
+                    <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                      <Check className="h-4 w-4" />
+                    </motion.div>
+                  ) : (
+                    <motion.div key="copy" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                      <Bookmark className="h-4 w-4" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+  
+</Button>
             </div>
           </motion.div>
         )}

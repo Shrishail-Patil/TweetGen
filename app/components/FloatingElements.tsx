@@ -20,7 +20,7 @@ export default function FloatingElements() {
           className="absolute text-primary/10"
           style={{ left: element.x, top: element.y }}
           animate={{
-            y: ["0%", "20%", "0%"],
+            y: ["0%", "40%", "0%"],
           }}
           transition={{
             duration: element.duration,
